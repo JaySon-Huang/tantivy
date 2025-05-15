@@ -119,7 +119,7 @@ fn main() -> tantivy::Result<()> {
     body => "You will rejoice to hear that no disaster has accompanied the commencement of an \
              enterprise which you have regarded with such evil forebodings.  I arrived here \
              yesterday, and my first task is to assure my dear sister of my welfare and \
-             increasing confidence in the success of my undertaking."
+             increasing confidence in the success of my undertaking.yellow"
     ))?;
 
     // This is an example, so we will only index 3 documents
@@ -140,6 +140,8 @@ fn main() -> tantivy::Result<()> {
     //
     // This call is blocking.
     index_writer.commit()?;
+
+    println!("index is written to {}", index_path.into_path().display());
 
     // If `.commit()` returns correctly, then all of the
     // documents that have been added are guaranteed to be
@@ -187,12 +189,15 @@ fn main() -> tantivy::Result<()> {
     // Here, if the user does not specify which
     // field they want to search, tantivy will search
     // in both title and body.
+    // let query_parser = QueryParser::for_index(&index, vec![title, body]);
+    // let query_parser = QueryParser::for_index(&index, vec![title]);
     let query_parser = QueryParser::for_index(&index, vec![title, body]);
 
     // `QueryParser` may fail if the query is not in the right
     // format. For user facing applications, this can be a problem.
     // A ticket has been opened regarding this problem.
-    let query = query_parser.parse_query("sea whale")?;
+    // let query = query_parser.parse_query("sea whale")?;
+    let query = query_parser.parse_query("yellow")?;
 
     // A query defines a set of documents, as
     // well as the way they should be scored.
@@ -216,9 +221,10 @@ fn main() -> tantivy::Result<()> {
     // Since the body field was not configured as stored,
     // the document returned will only contain
     // a title.
-    for (_score, doc_address) in top_docs {
+    println!("Top 10 documents matching the query:");
+    for (score, doc_address) in top_docs {
         let retrieved_doc: TantivyDocument = searcher.doc(doc_address)?;
-        println!("{}", retrieved_doc.to_json(&schema));
+        println!("score={}, doc={}", score, retrieved_doc.to_json(&schema));
     }
 
     // We can also get an explanation to understand
