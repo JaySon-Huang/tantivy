@@ -13,7 +13,7 @@
 // ---
 // Importing tantivy...
 use tantivy::collector::TopDocs;
-use tantivy::query::QueryParser;
+use tantivy::query::{EnableScoring, Query, QueryParser};
 use tantivy::schema::*;
 use tantivy::{doc, Index, IndexWriter, ReloadPolicy};
 use tempfile::TempDir;
@@ -239,7 +239,16 @@ fn main() -> tantivy::Result<()> {
 
     let explanation = query.explain(&searcher, doc_address)?;
 
-    println!("{}", explanation.to_pretty_json());
+    println!("explain={}", explanation.to_pretty_json());
+
+    {
+        println!("Iterating over all documents:");
+        let all_docs = searcher.search(&tantivy::query::AllQuery, &TopDocs::with_limit(10000))?;
+        for (score, doc_address) in all_docs{
+            let retrieved_doc: TantivyDocument = searcher.doc(doc_address)?;
+            println!("score={}, doc={}", score, retrieved_doc.to_json(&schema));
+        }
+    }
 
     Ok(())
 }
